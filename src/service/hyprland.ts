@@ -223,13 +223,23 @@ export class Hyprland extends Service {
                 this._monitors.set(m.id, m);
                 if (m.focused) {
                     this._active.monitor.update(m.id, m.name);
-                    this._active.workspace.update(m.activeWorkspace.id, m.activeWorkspace.name);
                     this._active.monitor.emit('changed');
-                    this._active.workspace.emit('changed');
+                    await this._updateActiveWorksapce(m.activeWorkspace.id, m.activeWorkspace.name)
                 }
             }
             if (notify)
                 this.notify('monitors');
+        } catch (error) {
+            logError(error);
+        }
+    }
+
+    private async _updateActiveWorksapce(id: number, name: string, notify = true) {
+        try {
+            this._active.workspace.update(id, name);
+            this._active.workspace.emit('changed');
+            if (notify)
+                this.notify('workspaces');
         } catch (error) {
             logError(error);
         }
@@ -272,7 +282,9 @@ export class Hyprland extends Service {
 
         try {
             switch (e) {
-                case 'workspace':
+                case 'workspacev2':
+                    await this._updateActiveWorksapce(Number(argv[0]), argv[1]);
+                    break;
                 case 'focusedmon':
                     await this._syncMonitors();
                     break;
