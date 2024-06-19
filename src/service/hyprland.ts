@@ -144,15 +144,16 @@ export class Hyprland extends Service {
         this._active.connect('changed', () => this.changed('active'));
     }
 
-    private _connection(socket: 'socket' | 'socket2') {
+    private async _connection(socket: 'socket' | 'socket2') {
         const sock = (pre: string) => `${pre}/hypr/${HIS}/.${socket}.sock`;
 
         const path = GLib.file_test(sock(XDG_RUNTIME_DIR), GLib.FileTest.EXISTS)
             ? sock(XDG_RUNTIME_DIR)
             : sock('/tmp');
 
-        return new Gio.SocketClient()
-            .connect(new Gio.UnixSocketAddress({ path }), null);
+        const connection = await new Gio.SocketClient()
+            .connect_async(new Gio.UnixSocketAddress({ path }), null);
+        return connection.connect_finish();
     }
 
     private _watchSocket(stream: Gio.DataInputStream) {
